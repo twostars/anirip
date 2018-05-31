@@ -130,6 +130,11 @@ func (e *Episode) GetFilename() string {
 	return e.Filename
 }
 
+// GetNumber returns the Episode's number
+func (e *Episode) GetNumber() float64 {
+	return e.Number
+}
+
 // getMapping out what the format or resolution of the video should be based on
 // crunchyroll xml
 func getMapping(quality string, m map[string]string) string {

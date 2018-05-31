@@ -4,6 +4,7 @@ import (
 	"github.com/sdwolfe32/anirip/anirip"
 	"github.com/sdwolfe32/anirip/crunchyroll"
 	"os"
+	"strconv"
 )
 
 var (
@@ -28,15 +29,37 @@ func main() {
 	l.Cyan("v1.5.0(6/14/2017) - by Steven Wolfe <steven@swolfe.me>")
 	args := os.Args
 
+	quality := "1080"
+	subLang := "eng"
+	seasonNo := -1
+	episodeNo := -1.0
+
 	// If the user isn't using the cli correctly give them an example of how
-	if len(os.Args) != 4 {
+	if len(args) < 4 {
 		l.Warn("CLI usage : anirip username password http://www.crunchyroll.com/miss-kobayashis-dragon-maid")
 		return
 	}
-	download(l, args[3], args[1], args[2], "1080", "eng")
+
+	if len(args) >= 5 {
+		quality = args[4]
+	}
+
+	if len(args) >= 6 {
+		subLang = args[5]
+	}
+
+	if len(args) >= 7 {
+		seasonNo, _ = strconv.Atoi(args[6])
+	}
+
+	if len(args) >= 8 {
+		episodeNo, _ = strconv.ParseFloat(args[7], 64)
+	}
+
+	download(l, args[3], args[1], args[2], quality, subLang, seasonNo, episodeNo)
 }
 
-func download(l *anirip.Logger, showURL, user, pass, quality, subLang string) {
+func download(l *anirip.Logger, showURL, user, pass, quality string, subLang string, seasonNo int, episodeNo float64) {
 	// Verifies the existance of an anirip folder in our temp directory
 	_, err := os.Stat(tempDir)
 	if err != nil {
@@ -67,20 +90,27 @@ func download(l *anirip.Logger, showURL, user, pass, quality, subLang string) {
 		return
 	}
 
-	// Creates a new video processor that wil perform all video processing operations
+	// Creates a new video processor that will perform all video processing operations
 	vp := anirip.NewVideoProcessor(tempDir)
 
 	// Creates a new show directory which will store all seasons
 	os.Mkdir(show.GetTitle(), 0777)
+
 	for _, season := range show.GetSeasons() {
+		if seasonNo >= 0 && season.GetNumber() != seasonNo {
+			continue
+		}
 
 		// Creates a new season directory that will store all episodes
 		os.Mkdir(show.GetTitle()+string(os.PathSeparator)+seasonMap[season.GetNumber()], 0777)
 		for _, episode := range season.GetEpisodes() {
+			if episodeNo >= 0 && episode.GetNumber() != episodeNo {
+				continue
+			}
 
 			// Retrieves more fine grained episode metadata
 			l.Info("Retrieving Episode Info...")
-			if err = episode.GetEpisodeInfo(client, "1080"); err != nil {
+			if err = episode.GetEpisodeInfo(client, quality); err != nil {
 				l.Error(err)
 				continue
 			}

@@ -25,4 +25,5 @@ type Episode interface {
 	Download(vp VideoProcessor) error
 	DownloadSubtitles(client *HTTPClient, language string, tempDir string) (string, error)
 	GetFilename() string
+	GetNumber() float64
 }
